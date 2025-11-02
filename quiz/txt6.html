@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Memory Game with Timer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/style.css">
+  <style>
+    body { font-family: 'Poppins', sans-serif; padding: 20px; text-align: center; }
+    h1 { margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 150px); gap: 15px; justify-content: center; margin-bottom: 20px; }
+    .card { width: 150px; height: 100px; background: #2a9d8f; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; cursor: pointer; border-radius: 8px; }
+    .card.flipped, .card.matched { background: #e9c46a; color: #000; cursor: default; }
+    .score, .timer { margin-top: 15px; font-weight: bold; }
+    .buttons { margin-top: 20px; display: flex; justify-content: center; gap: 20px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 8px; border: none; background: #264653; color: #fff; }
+    button:hover { background: #1d3557; }
+  </style>
+</head>
+<body>
+  <h1>Vocabulary Memory Game</h1>
+  <div class="grid" id="grid"></div>
+  <div class="score" id="score">Matches: 0</div>
+  <div class="timer" id="timer">Time: 0s</div>
+  <div class="buttons">
+    <button onclick="gopage()">Back to text</button>
+
+    <button onclick="goBack()">Back to Main Page</button>
+    <button onclick="restartGame()">Restart Game</button>
+  </div>
+
+  <script>
+    let words =
+[
+  {word: "Knowledge", antonym: "Ignorance"},
+  {word: "Curiosity", antonym: "Indifference"},
+  {word: "Innovation", antonym: "Stagnation"},
+  {word: "Intellectual humility", antonym: "Arrogance"},
+  {word: "Epistemic", antonym: "Uninformed"},
+  {word: "Awe", antonym: "Disdain"},
+  {word: "Uncertainty", antonym: "Certainty"},
+  {word: "Critical inquiry", antonym: "Acceptance"},
+  {word: "Creativity", antonym: "Conformity"},
+  {word: "Interdisciplinary", antonym: "Monodisciplinary"},
+  {word: "Disparate", antonym: "Similar"},
+  {word: "Transformative", antonym: "Static"},
+  {word: "Enlightenment", antonym: "Ignorance"},
+  {word: "Wisdom", antonym: "Foolishness"},
+  {word: "Progress", antonym: "Regression"}
+];
+
+
+let cardsArray = [];
+let flippedCards = [];
+let matches = 0;
+let time = 0;
+let timerInterval;
+
+function initializeGame() {
+  // Reset variables
+  flippedCards = [];
+  matches = 0;
+  time = 0;
+  document.getElementById("grid").innerHTML = "";
+  document.getElementById("score").innerText = `Matches: 0`;
+  document.getElementById("timer").innerText = `Time: 0s`;
+
+  // Pick 4 random words
+  const shuffledWords = words.sort(() => 0.5 - Math.random()).slice(0, 4);
+
+  // Create cards for those 4 words
+  cardsArray = [];
+  shuffledWords.forEach(item => {
+    cardsArray.push({ text: item.word, type: 'word' });
+    cardsArray.push({ text: item.antonym, type: 'antonym' });
+  });
+  cardsArray.sort(() => 0.5 - Math.random());
+
+  cardsArray.forEach(cardData => createCard(cardData));
+
+  // Start timer
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    time++;
+    document.getElementById("timer").innerText = `Time: ${time}s`;
+  }, 1000);
+}
+
+function createCard(cardData) {
+  const grid = document.getElementById("grid");
+  const card = document.createElement("div");
+  card.classList.add("card");
+  card.dataset.type = cardData.type;
+  card.dataset.text = cardData.text;
+  card.innerText = "";
+  card.addEventListener("click", () => flipCard(card));
+  grid.appendChild(card);
+}
+
+function flipCard(card) {
+  if (card.classList.contains("flipped") || card.classList.contains("matched") || flippedCards.length === 2) return;
+  card.classList.add("flipped");
+  card.innerText = card.dataset.text;
+  flippedCards.push(card);
+  if (flippedCards.length === 2) checkMatch();
+}
+
+function checkMatch() {
+  const [card1, card2] = flippedCards;
+  const wordObj = words.find(w =>
+    (w.word === card1.dataset.text || w.antonym === card1.dataset.text) &&
+    (w.word === card2.dataset.text || w.antonym === card2.dataset.text)
+  );
+
+  if (wordObj &&
+      ((wordObj.word === card1.dataset.text && wordObj.antonym === card2.dataset.text) ||
+       (wordObj.antonym === card1.dataset.text && wordObj.word === card2.dataset.text))) {
+    card1.classList.add("matched");
+    card2.classList.add("matched");
+    matches++;
+    document.getElementById("score").innerText = `Matches: ${matches}`;
+    flippedCards = [];
+    if (matches === 4) endGame(); // Only 4 pairs now
+  } else {
+    setTimeout(() => {
+      card1.classList.remove("flipped");
+      card2.classList.remove("flipped");
+      card1.innerText = "";
+      card2.innerText = "";
+      flippedCards = [];
+    }, 1000);
+  }
+}
+
+function endGame() {
+  clearInterval(timerInterval);
+  setTimeout(() => alert(`Congratulations! You matched all pairs in ${time} seconds!`), 200);
+}
+
+function goBack() {
+  window.location.href = "../index.html"; // Change this to your main page URL
+}
+function gopage() {
+  window.location.href = "../texts/txt6.html"; // Change this to your main page URL
+}
+
+function restartGame() {
+  initializeGame();
+}
+
+// Start the game initially
+initializeGame();
+
+
+  </script>
+</body>
+</html>
